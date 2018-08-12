@@ -27,7 +27,7 @@ from tests.fakes import FakeQueueFactory, FakeDBFactory
 class StorageTests(TestCase):
 
     def setUp(self):
-        self._settings = Settings(Command.STORE, "irrelevant", "irrelevant")
+        self._settings = Settings.defaults()
         self._ui = MagicMock(UI)
         self._queue_factory = FakeQueueFactory()
         self._db_factory = FakeDBFactory()
@@ -36,10 +36,6 @@ class StorageTests(TestCase):
                                 queue_factory=self._queue_factory,
                                 db_factory=self._db_factory)
         self._consumer = None
-
-
-    def test_bidon(self):
-        self.assertEqual(2, 2)
 
 
     def test_calls_db_on_new_request(self):

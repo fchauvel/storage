@@ -47,17 +47,26 @@ follows:
 You can configure several options through the command line, as explain
 in the help:
 
-    $> sensapp-storage --help
-	usage: sensapp-storage [-h] [-v] [-n QUEUE_NAME] [-q TASK_QUEUE]
+	$> sensapp-storage --help
+	usage: sensapp-storage [-h] [-v] [-q QUEUE_HOST] [-p QUEUE_PORT] [-n QUEUE_NAME] [-o DB_HOST]
+	                       [-r DB_PORT] [-m DB_NAME]
 
 	Stores data sent by sensors
-	
+
 	optional arguments:
 	  -h, --help            show this help message and exit
-      -v, --version         show the version number
+      -v, --version         show the version number and exit
+      -q QUEUE_HOST, --queue-host QUEUE_HOST
+                            set the host name of the message queue (default: task-queue)
+      -p QUEUE_PORT, --queue-port QUEUE_PORT
+                            set the port of the message queue (default: 5672)
       -n QUEUE_NAME, --queue-name QUEUE_NAME
-                            set the name of the task queue (default: 'SENSAPP_TASKS')
-      -q TASK_QUEUE, --task-queue TASK_QUEUE
-                            set the URL of the source task queue (default: amqp://task-queue:5672)
+                            set the name of the message queue (default: SENSAPP_TASKS)
+      -o DB_HOST, --db-host DB_HOST
+                            set the host name of the database (default: storage-db)
+      -r DB_PORT, --db-port DB_PORT
+                            set the port of the database (default: 8086)
+      -m DB_NAME, --db-name DB_NAME
+                            set the name of the database (default: sensapp)
 							
 							

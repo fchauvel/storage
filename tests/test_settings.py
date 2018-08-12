@@ -21,47 +21,49 @@ class SettingsTests(TestCase):
     def setUp(self):
         pass
 
-
-    def test_parsing_short_queue_address(self):
-        ADDRESS = "amqp://my-task-queue:5672"
-
-        settings = Settings.from_command_line(["-q", ADDRESS])
-
-        self.assertEqual(settings.queue_address, ADDRESS)
-
-
-    def test_parsing_long_queue_address(self):
-        ADDRESS = "amqp://my-task-queue:5672"
-
-        settings = Settings.from_command_line(["--task-queue", ADDRESS])
-
-        self.assertEqual(settings.queue_address, ADDRESS)
-
-
     def test_parsing_short_version(self):
-        settings = Settings.from_command_line(["-v"]);
+        for marker in ["-v", "--version"]:
+            settings = Settings.from_command_line(["-v"]);
+            self.assertEqual(settings.command, Command.SHOW_VERSION)
 
-        self.assertEqual(settings.command, Command.SHOW_VERSION)
+
+    def test_parsing_short_queue_host(self):
+        HOST = "my-super-queue"
+        for marker in ["-q", "--queue-host"]:
+            settings = Settings.from_command_line([marker, HOST])
+            self.assertEqual(settings.queue_address, HOST)
 
 
-    def test_parsing_long_version(self):
-        settings = Settings.from_command_line(["--version"]);
-
-        self.assertEqual(settings.command, Command.SHOW_VERSION)
+    def test_parsing_queue_port(self):
+        PORT = "5567"
+        for marker in ["-p", "--queue-port"]:
+            settings = Settings.from_command_line([marker, PORT])
+            self.assertEqual(settings.queue_port, int(PORT))
 
 
     def test_parsing_short_queue_name(self):
         QUEUE_NAME = "my queue"
+        for marker in ["-n", "--queue-name"]:
+            settings = Settings.from_command_line([marker, QUEUE_NAME]);
+            self.assertEqual(settings.queue_name, QUEUE_NAME)
 
-        settings = Settings.from_command_line(["-n", QUEUE_NAME]);
 
-        self.assertEqual(settings.queue_name, QUEUE_NAME)
+    def test_parsing_short_db_host(self):
+        DB_HOST = "my-storage-db"
+        for marker in ["-o", "--db-host"]:
+            settings = Settings.from_command_line([marker, DB_HOST]);
+            self.assertEqual(settings.db_host, DB_HOST)
 
 
-    def test_parsing_long_queue_name(self):
-        QUEUE_NAME = "my queue"
+    def test_parsing_short_db_port(self):
+        DB_PORT = "4545"
+        for marker in ["-r", "--db-port"]:
+            settings = Settings.from_command_line([marker, DB_PORT]);
+            self.assertEqual(settings.db_port, int(DB_PORT))
 
-        settings = Settings.from_command_line(["--queue-name", QUEUE_NAME]);
 
-        self.assertEqual(settings.queue_name, QUEUE_NAME)
-
+    def test_parsing_short_db_port(self):
+        DB_NAME = "sensors"
+        for marker in ["-m", "--db-name"]:
+            settings = Settings.from_command_line([marker, DB_NAME]);
+            self.assertEqual(settings.db_name, DB_NAME)
