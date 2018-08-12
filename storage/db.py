@@ -46,10 +46,12 @@ class InfluxDB(DataStore):
     def connect(self):
         self._client = InfluxDBClient(host=self._host, port=self._port)
         databases = self._client.get_list_database()
-        if not any(db[name] == self._name for db in databases):
+        if not any(db["name"] == self._name for db in databases):
             self._client.create_database(self._name)
-        client.switch_database(self._name)
+        self._client.switch_database(self._name)
 
 
-    def store(self, data):
+    def store(self, text):
+        import json
+        data = json.loads(text.decode("utf-8"))
         self._client.write_points(data)

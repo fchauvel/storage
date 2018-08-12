@@ -16,6 +16,7 @@ from time import sleep
 
 from sys import stdout
 
+from storage.settings import Command
 from storage.utils import retry
 
 
