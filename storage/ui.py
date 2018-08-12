@@ -18,9 +18,11 @@ class UI:
     OPENING = ("{program} -- v{version} ({license})\n"
                "{copyright}\n\n")
     CONNECTION = "Contacting '{address}' ...\n"
-    WAITING = "Waiting for tasks (Ctrl+C to exit) ...\n"
+    WAITING_FOR_TASKS = "Waiting for tasks (Ctrl+C to exit) ...\n"
     REQUEST = "New request: {body}\n"
     EPILOGUE = "That's all folks!\n"
+
+    ERROR = " /!\ Error: {error}\n"
     
     def __init__(self, output):
         self._output = output
@@ -39,11 +41,14 @@ class UI:
     def show_connection_to(self, address):
         self._print(self.CONNECTION, address=address);
 
-    def show_waiting(self):
-        self._print(self.WAITING)
+    def show_waiting_for_tasks(self):
+        self._print(self.WAITING_FOR_TASKS)
 
     def show_request(self, body):
         self._print(self.REQUEST, body=body)
+
+    def show_error(self, error):
+        self._print(self.ERROR, error=error)
         
     def show_epilogue(self):
         self._print(self.EPILOGUE)

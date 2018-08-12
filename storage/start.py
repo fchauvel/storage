@@ -18,12 +18,13 @@ from storage.settings import Settings, Command
 from storage.ui import UI
 from storage.queues import QueueFactories
 from storage.core import Storage
-
+from storage.db import DataStoreFactories
 
 
 def main():
     settings = Settings.from_command_line(argv[1:])
     storage = Storage(settings,
                       UI(stdout),
-                      QueueFactories.rabbitMQ)
+                      QueueFactories.rabbitMQ,
+                      DataStoreFactories.influxDB)
     storage.start()

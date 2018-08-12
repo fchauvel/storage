@@ -74,7 +74,7 @@ class FakeDBFactory:
     def __init__(self):
         self._db = None
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         self._db = MagicMock(DataStore)
         return self._db
 

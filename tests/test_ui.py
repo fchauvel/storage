@@ -51,10 +51,10 @@ class UITests(TestCase):
                          UI.CONNECTION.format(address=ADDRESS));
 
     def test_show_waiting(self):
-        self._ui.show_waiting()
+        self._ui.show_waiting_for_tasks()
 
         self.assertEqual(self._buffer.getvalue(),
-                         UI.WAITING)
+                         UI.WAITING_FOR_TASKS)
 
     def test_show_request(self):
         REQUEST = "This is a nice request"
@@ -62,6 +62,12 @@ class UITests(TestCase):
 
         self.assertEqual(self._buffer.getvalue(),
                          UI.REQUEST.format(body=REQUEST))
+
+    def test_show_error(self):
+        ERROR = "UNknown error"
+        self._ui.show_error(ERROR)
+        self.assertEqual(self._buffer.getvalue(),
+                         UI.ERROR.format(error=ERROR))
 
     def test_show_epilogue(self):
         self._ui.show_epilogue()
