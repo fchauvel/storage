@@ -11,6 +11,13 @@
 import pika
 
 
+class QueueFactories:
+
+    @staticmethod
+    def rabbitMQ(queue_host, callback):
+        return RabbitMQ(queue_host, callback)
+
+
 class RabbitMQ:
 
     def __init__(self, address, callback):
@@ -26,7 +33,7 @@ class RabbitMQ:
         self._channel.basic_qos(prefetch_count=1)
         self._channel.basic_consume(self._callback, queue=queue)
 
-    def consume(self):
+    def wait_for_task(self):
         self._channel.start_consuming()
 
 

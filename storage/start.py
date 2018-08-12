@@ -14,62 +14,16 @@
 
 from sys import argv, stdout
 
-from signal import signal, SIGINT, SIGTERM
-
 from storage.settings import Settings, Command
 from storage.ui import UI
-from storage.task_queue import RabbitMQ
+from storage.queues import QueueFactories
+from storage.core import Storage
 
-
-
-
-class Storage:
-    
-    def __init__(self, settings, ui):
-        self._settings = settings
-        self._ui = ui
-
-        
-    def start(self):
-        self._setup_signal_handlers()
-        if self._settings.command == Command.SHOW_VERSION:
-            self._ui.show_version()
-        elif self._settings.command == Command.STORE:
-            self.store()
-
-            
-    def _setup_signal_handlers(self):
-        import os
-        signal(SIGINT, self.stop)
-        signal(SIGTERM, self.stop)
-        if os.name == "nt":
-            from signal import CTRL_C_EVENT
-            signal(CTRL_C_EVENT, self.stop)
-
-            
-    def store(self):
-        self._ui.show_opening()
-        queue = RabbitMQ(self._settings.queue_address, self._request_handler)
-        self._ui.show_connection_to(self._settings.queue_address);
-        queue.connect_to(this._settings.queue_name)
-        self._ui.show_waiting()
-        queue.consume()
-
-        
-    def _request_handler(self, body):
-        self._ui.show_request(body)
-
-        
-    def stop(self, signum, frame):
-        self._ui.show_epilogue()
-        stdout.flush()
-        exit()
 
 
 def main():
     settings = Settings.from_command_line(argv[1:])
-    storage = Storage(settings, UI(stdout))
+    storage = Storage(settings,
+                      UI(stdout),
+                      QueueFactories.rabbitMQ)
     storage.start()
-    
-
-    

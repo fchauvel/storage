@@ -8,15 +8,8 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
-from unittest import TestCase
 
+class DataStore:
 
-class StorageTests(TestCase):
-
-    def setUp(self):
+    def store(self, data):
         pass
-
-    def test_should_pass(self):
-        self.assertEqual(3*4, 12)
-
-
