@@ -24,8 +24,6 @@ from storage.task_queue import RabbitMQ
 
 
 class Storage:
-
-    SENSAPP_QUEUE = "SENSAPP_TASK_QUEUE"
     
     def __init__(self, settings, ui):
         self._settings = settings
@@ -53,7 +51,7 @@ class Storage:
         self._ui.show_opening()
         queue = RabbitMQ(self._settings.queue_address, self._request_handler)
         self._ui.show_connection_to(self._settings.queue_address);
-        queue.connect_to(self.SENSAPP_QUEUE)
+        queue.connect_to(this._settings.queue_name)
         self._ui.show_waiting()
         queue.consume()
 
