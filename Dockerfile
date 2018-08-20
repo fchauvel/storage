@@ -17,7 +17,7 @@ RUN apt-get -qq update
 RUN apt-get -qq -y install git
 
 # Fetch, build and install sensapp-storage
-RUN git clone https://github.com/fchauvel/storage.git
+COPY . storage
 WORKDIR storage
 RUN pip install -r requirements.txt
 RUN pip install .
