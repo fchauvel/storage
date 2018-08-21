@@ -36,16 +36,16 @@ class DataStore:
     
 class DBListener:
 
-    def connected(self, host, port, name):
+    def db_connected(self, host, port, name):
         pass
 
-    def connection_failed(self, host, port, name, error):
+    def db_connection_failed(self, host, port, name, error):
         pass
 
-    def inserted(self, data):
+    def db_inserted(self, data):
         pass
     
-    def insertion_failed(self, data, error):
+    def db_insertion_failed(self, data, error):
         pass
 
 
@@ -68,10 +68,10 @@ class InfluxDB(DataStore):
             if not any(db["name"] == self._name for db in databases):
                 self._client.create_database(self._name)
             self._client.switch_database(self._name)
-            self._listener.connected(self._host, self._port, self._name)
+            self._listener.db_connected(self._host, self._port, self._name)
             
         except Exception as error:
-            self._listener.connection_failed(self._host, self._port, self._name, error)
+            self._listener.db_connection_failed(self._host, self._port, self._name, error)
             raise
 
 
@@ -79,8 +79,8 @@ class InfluxDB(DataStore):
         data = json.loads(text.decode("utf-8"))
         try:
             self._client.write_points(data)
-            self._listener.inserted(data)
+            self._listener.db_inserted(data)
 
         except Exception as error:
-            self._listener.insertion_error(data, error)
+            self._listener.db_insertion_error(data, error)
             raise error

@@ -21,10 +21,10 @@ class QueueFactories:
     
 class QueueListener:
 
-    def connected(self, host, port, name):
+    def queue_connected(self, host, port, name):
         pass
 
-    def connection_failed(self, host, port, name, error):
+    def queue_connection_failed(self, host, port, name, error):
         pass
 
     def waiting_messages(self):
@@ -67,10 +67,10 @@ class RabbitMQ(Queue):
             self._channel.queue_declare(queue=self._name, durable=True)
             self._channel.basic_qos(prefetch_count=1)
             self._channel.basic_consume(self._on_new_message, queue=self._name)
-            self._listener.connected(self._host, self._port, self._name)
+            self._listener.queue_connected(self._host, self._port, self._name)
             
         except Exception as error:
-            self._listener.connection_failed(self._host, self._port, self._name, error)
+            self._listener.queue_connection_failed(self._host, self._port, self._name, error)
             raise
             
             

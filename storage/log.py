@@ -15,14 +15,21 @@ import yaml
 import logging
 import logging.config
 
+from storage.queues import QueueListener
+from storage.db import DBListener
+
+
 STARTING_UP = "Starting ..."
 DB_CONNECTED = "Connected to DB '{name}' on {host}:{port}."
 QUEUE_CONNECTED = "Connected to message-queue '{name}' on {host}:{port}."
 
 
-class Logger:
+class Logger(QueueListener, DBListener):
 
     def __init__(self):
+        QueueListener.__init__(self)
+        DBListener.__init__(self)
+        
         with open("logging.yml", "r") as source:
             yamlConfig = yaml.load(source)
             logging.config.dictConfig(yamlConfig)

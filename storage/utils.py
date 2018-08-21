@@ -38,5 +38,34 @@ def retry(max_attempts, backoff):
 
 
 
+def relay_to(*listeners):
+    return Relay(*listeners)
+
+
+class Relay:
+
+    def __init__(self, *listeners):
+        self._listeners = listeners
+
+
+    def __getattr__(self, name):
+
+        candidates = []
+        for each_listener in self._listeners:
+            if hasattr(each_listener, name) and callable(getattr(each_listener, name)):
+                candidates.append(each_listener)
+        
+        def relay(*args, **kwargs):
+            for each_listener in candidates:
+                method = getattr(each_listener, name)
+                method(*args, **kwargs)
+                
+        if candidates:
+            return relay
+        
+        raise AttributeError("None of the listeners have attribute '%s'!" % name)
+                    
+
+                    
 
 

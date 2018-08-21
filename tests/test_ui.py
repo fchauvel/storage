@@ -24,7 +24,7 @@ class UITests(TestCase):
     HOST = "my-test-host",
     PORT = 6667
     NAME = "the_thing"
-    ERROR = "unknown error"
+    ERROR = RuntimeError("This is bad error!")
 
     
     def setUp(self):
@@ -64,7 +64,7 @@ class UITests(TestCase):
                             host=self.HOST,
                             port=self.PORT,
                             name=self.NAME,
-                            error=self.ERROR);
+                            error=type(self.ERROR).__name__);
 
     def test_queue_connected(self):
         self._ui.queue_connected(self.HOST, self.PORT, self.NAME)
@@ -81,7 +81,7 @@ class UITests(TestCase):
                             host=self.HOST,
                             port=self.PORT,
                             name=self.NAME,
-                            error=self.ERROR);
+                            error=type(self.ERROR).__name__);
 
     def _assert_buffer(self, pattern, **kwargs):
         self.assertEqual(self._buffer.getvalue(),

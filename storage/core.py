@@ -16,61 +16,25 @@ from sys import stdout
 
 from storage.log import Logger
 from storage.settings import Command
-from storage.utils import retry
+from storage.utils import retry, relay_to
 from storage.queues import QueueListener
 from storage.db import DBListener
 
 
 
-class DBHandler(DBListener):
-    """
-    Handle events from the database: log and forward them to the UI.
-    """
-
-    def __init__(self, ui, logger):
-        self._ui = ui
-        self._logger = logger
-    
-    def connected(self, host, port, name):
-        self._logger.db_connected(host, port, name)
-        self._ui.db_connected(host, port, name)
-
-    def connection_failed(self, host, port, name, error):
-        self._logger.db_connection_failed(host, port, name, error)
-        self._ui.db_connection_failed(host, port, name, type(error).__name__)
-
-    def inserted(self, data):
-        pass
-    
-    def insertion_failed(self, data, error):
-        self._ui.show_error(error)
-
-    
-
-class QueueHandler(QueueListener):
+class MessageHandler(QueueListener, DBListener):
 
     """
-    Handle events comming from the message queue. Log and forward them to the UI."
+    Handle new messages coming from the message-queue
     """
 
-    def __init__(self, ui, db, logger):
-        self._ui = ui
+    def __init__(self, db):
+        QueueListener.__init__(self)
+        DBListener.__init__(self)
         self._db = db
-        self._logger = logger
 
-    def connected(self, host, port, name):
-        self._logger.queue_connected(host, port, name)
-        self._ui.queue_connected(host, port, name)
-
-    def connection_failed(self, host, port, name, error):
-        self._logger.queue_connection_failed(host, port, name, error)
-        self._ui.queue_connection_failed(host, port, name, type(error).__name__)
-
-    def waiting_messages(self):
-        self._ui.waiting_messages()
-
+        
     def new_message(self, body):
-        self._ui.show_request(body)
         self._db.store(body)
 
     
@@ -84,11 +48,12 @@ class Storage:
         self._db = db(settings.db_host,
                       settings.db_port,
                       settings.db_name,
-                      DBHandler(self._ui, self._logger))
+                      relay_to(self._ui, self._logger))
+        self._handler = MessageHandler(self._db)
         self._queue = queue(settings.queue_host,
                             settings.queue_port,
                             settings.queue_name,
-                            QueueHandler(self._ui, self._db, self._logger))
+                            relay_to(self._ui, self._logger, self._handler))
                             
 
     def start(self):

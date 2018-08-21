@@ -9,7 +9,11 @@
 #
 
 
+
 from storage import __version__, __program__, __copyright__, __license__
+from storage.queues import QueueListener
+from storage.db import DBListener
+
 
 
 class UI:
@@ -43,6 +47,8 @@ class UI:
 
     
     def __init__(self, output):
+        QueueListener.__init__(self)
+        DBListener.__init__(self)
         self._output = output
 
 
@@ -64,7 +70,7 @@ class UI:
                     port=port,
                     host=host,
                     name=name,
-                    error=error)
+                    error=type(error).__name__)
 
     def queue_connected(self, host, port, name):
         self._print(self.QUEUE_CONNECTED, port=port, host=host, name=name)
@@ -74,7 +80,7 @@ class UI:
                     port=port,
                     host=host,
                     name=name,
-                    error=error)
+                    error=type(error).__name__)
 
     def waiting_messages(self):
         self._print(self.WAITING_MESSAGES)
