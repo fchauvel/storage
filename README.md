@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/fchauvel/storage.svg?branch=master)](https://travis-ci.org/fchauvel/storage)
+
+
 # SensApp::Storage 
 
 This SensApp's storage, the service that persists data received from
