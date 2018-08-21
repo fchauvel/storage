@@ -8,6 +8,7 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
+
 from argparse import ArgumentParser
 
 
@@ -38,7 +39,7 @@ class Settings:
     
     def __init__(self, **kwargs):
         self._command = kwargs["command"] or  self.DEFAULT_COMMAND
-        self._queue_address = kwargs["queue_host"] or self.DEFAULT_QUEUE_HOST
+        self._queue_host = kwargs["queue_host"] or self.DEFAULT_QUEUE_HOST
         self._queue_port = kwargs["queue_port"] or self.DEFAULT_QUEUE_PORT
         self._queue_name = kwargs["queue_name"] or self.DEFAULT_QUEUE_NAME
         self._db_host = kwargs["db_host"] or self.DEFAULT_DB_HOST
@@ -50,8 +51,8 @@ class Settings:
         return self._command
 
     @property
-    def queue_address(self):
-        return self._queue_address
+    def queue_host(self):
+        return self._queue_host
 
     @property
     def queue_port(self):

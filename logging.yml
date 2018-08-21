@@ -1,0 +1,28 @@
+#
+# SensApp::Storage
+#
+# Copyright (C) 2018 SINTEF Digital
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms
+# of the MIT license.  See the LICENSE file for details.
+#
+
+version: 1
+
+formatters:
+  simple:
+    format: '%(asctime)s - %(levelname)s - %(message)s'
+
+handlers:
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: storage.log
+    maxBytes: 2048
+    backupCount: 3
+
+root:
+  level: DEBUG
+  handlers: [file]

@@ -10,6 +10,11 @@
 
 
 
+import yaml
+
+import logging
+import logging.config
+
 from signal import signal, SIGINT, SIGTERM
 
 from time import sleep
@@ -18,26 +23,93 @@ from sys import stdout
 
 from storage.settings import Command
 from storage.utils import retry
+from storage.queues import QueueListener
+from storage.db import DBListener
 
+
+
+class DBHandler(DBListener):
+    """
+    Handle events from the database: log and forward them to the UI.
+    """
+
+    def __init__(self, ui):
+        self._ui = ui
+    
+    def connected(self, host, port, name):
+        self._ui.db_connected(host, port, name)
+
+    def connection_failed(self, host, port, name, error):
+        logging.error(str(error))
+        self._ui.db_connection_failed(host, port, name, type(error).__name__)
+
+    def inserted(self, data):
+        pass
+    
+    def insertion_failed(self, data, error):
+        self._ui.show_error(error)
+
+    
+
+class QueueHandler(QueueListener):
+
+    """
+    Handle events comming from the message queue. Log and forward them to the UI."
+    """
+
+    def __init__(self, ui, db):
+        self._ui = ui
+        self._db = db
+
+    def connected(self, host, port, name):
+        self._ui.queue_connected(host, port, name)
+
+    def connection_error(self, host, port, name, error):
+        logging.error(str(error))
+        self._ui.queue_connection_failed(host, port, name, type(error).__name__)
+
+    def waiting_messages(self):
+        self._ui.waiting_messages()
+
+    def new_message(self, body):
+        self._ui.show_request(body)
+        self._db.store(body)
+
+    
 
 class Storage:
 
-    def __init__(self, settings, ui, queue_factory, db_factory):
+    def __init__(self, settings, ui, queue, db):
         self._settings = settings
         self._ui = ui
-        self._create_queue = queue_factory
-        self._create_db = db_factory
-
+        self._db = db(settings.db_host,
+                      settings.db_port,
+                      settings.db_name,
+                      DBHandler(self._ui))
+        self._queue = queue(settings.queue_host,
+                            settings.queue_port,
+                            settings.queue_name,
+                            QueueHandler(self._ui, self._db))
+                            
 
     def start(self):
+        self._setup_logging()
         self._setup_signal_handlers()
-        self._ui.show_opening()
-        self.connect_to_database()
+
+        self._ui.greetings()
+        
         if self._settings.command == Command.SHOW_VERSION:
             self._ui.show_version()
+
         elif self._settings.command == Command.STORE:
             self.store()
 
+    
+    def _setup_logging(self):
+        with open("logging.yml", "r") as source:
+            yamlConfig = yaml.load(source)
+            logging.config.dictConfig(yamlConfig)
+        
 
     def _setup_signal_handlers(self):
         import os
@@ -47,39 +119,21 @@ class Storage:
             from signal import CTRL_C_EVENT
             signal(CTRL_C_EVENT, self._ctrl_c_handler)
 
-
-    def connect_to_database(self):
-        def do_connect():
-            try :
-                self._ui.show_connection_to(self._settings.db_host)
-                self._db.connect()
-
-            except Exception as error:
-                self._ui.show_error(str(error))
-                sleep(10)
-                raise error
-
-        self._db = self._create_db(self._settings.db_host,
-                                   self._settings.db_port,
-                                   self._settings.db_name)
-        try:
-            retry(do_connect, 5)
-        except RuntimeError as error:
-            self._ui.show_error(str(error))
-            self.stop()
-
-
+        
     def store(self):
-        queue = self._create_queue(self._settings.queue_address, self._request_handler)
-        self._ui.show_connection_to(self._settings.queue_address);
-        queue.connect_to(self._settings.queue_name)
-        self._ui.show_waiting_for_tasks()
-        queue.wait_for_task() # Blocking call
+        self._connect_to_database()
+        self._connect_to_queue()
+        self._queue.wait_messages() # Blocking call
 
 
-    def _request_handler(self, body):
-        self._ui.show_request(body)
-        self._db.store(body)
+    @retry(max_attempts=-1, backoff=20)
+    def _connect_to_database(self):
+        self._db.connect()
+
+                      
+    @retry(max_attempts=-1, backoff=20)
+    def _connect_to_queue(self):
+        self._queue.connect()
 
 
     def _ctrl_c_handler(self, signum, frame):
@@ -87,7 +141,7 @@ class Storage:
 
 
     def stop(self):
-        self._ui.show_epilogue()
+        self._ui.goodbye()
         stdout.flush()
         exit()
 

@@ -8,15 +8,35 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
+import logging
+
+from time import sleep
 
 
-def retry(target, attempts):
-    for _ in range(attempts):
-        try:
-            return target()
+RETRY_WARNING = "Retyring in {} seconds ({} / {})"
 
-        except Exception:
-            pass
 
-    raise RuntimeError("All {count} attempts failed".format(count=attempts))
+def retry(max_attempts, backoff):
+
+    def wrap(action):
+
+        def wrapper(*args, **kwargs):
+            attempt = 0
+            while attempt < max_attempts or max_attempts < 0:
+                attempt += 1
+                try:
+                    return action(*args, **kwargs)
+                except Exception as error:
+                    logging.warning(RETRY_WARNING.format(backoff, attempt, max_attempts))
+                    sleep(backoff)
+                
+            raise RuntimeError("All %d attempts failed!" % max_attempts)
+
+        return wrapper
+    
+    return wrap
+
+
+
+
 

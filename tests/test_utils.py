@@ -20,23 +20,32 @@ from storage.utils import retry
 
 class RetryTests(TestCase):
 
-
     def setUp(self):
-        pass
+        self._fragile_calls = 0
+        self._solid_calls = 0
 
+        
+    @retry(max_attempts=3, backoff=1)
+    def fragile(self):
+        self._fragile_calls += 1
+        raise ValueError("Failed!")
 
-    def test_retry_under_failures(self):
-        function = MagicMock(side_effect=Exception("error!"))
+    
+    @retry(max_attempts=3, backoff=1)
+    def solid(self):
+        self._solid_calls += 1
+        return 0
 
-        self.assertRaises(RuntimeError,
-                         lambda: retry(function, 5))
+    
+    def test_retry_under_failure(self):
+        self.assertRaises(RuntimeError, self.fragile)
+        self.assertEqual(self._fragile_calls, 3)
 
-        self.assertEqual(function.call_count, 5)
-
-
+        
     def test_retry_under_success(self):
-        function = MagicMock(return_value=6)
+        self.solid()
+        self.assertEqual(self._solid_calls, 1)
 
-        retry(function, 5)
-
-        self.assertEqual(function.call_count, 1)
+        
+    def test_bidon(self):
+        self.assertEqual(2,2)

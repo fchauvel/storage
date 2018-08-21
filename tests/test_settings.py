@@ -32,7 +32,7 @@ class SettingsTests(TestCase):
         HOST = "my-super-queue"
         for marker in ["-q", "--queue-host"]:
             settings = Settings.from_command_line([marker, HOST])
-            self.assertEqual(settings.queue_address, HOST)
+            self.assertEqual(settings.queue_host, HOST)
 
 
     def test_parsing_queue_port(self):

@@ -33,8 +33,8 @@ class StorageTests(TestCase):
         self._db_factory = FakeDBFactory()
         self._storage = Storage(settings=self._settings,
                                 ui=self._ui,
-                                queue_factory=self._queue_factory,
-                                db_factory=self._db_factory)
+                                queue=self._queue_factory,
+                                db=self._db_factory)
         self._consumer = None
 
 
@@ -49,7 +49,6 @@ class StorageTests(TestCase):
 
     def _start_storage(self):
         def do_start():
-            self._storage.connect_to_database()
             self._storage.store()
 
         self._consumer = Thread(target=do_start)

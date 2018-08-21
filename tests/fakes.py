@@ -15,29 +15,30 @@ from threading import Thread, Event
 from mock import MagicMock
 
 from storage.db import DataStore
+from storage.queues import Queue
 
 
-
-class FakeQueue:
+class FakeQueue(Queue):
     """
     Let a third party trigger the reception of requests
     """
 
-    def __init__(self, queue_address, callback):
-        self._callback = callback
-        self._request_data = None
-        self._new_request = Event()
+    def __init__(self, host, port, name, listener):
+        super().__init__(host, port, name, listener)
         self._stop = Event()
+        self._new_request = Event()
+        self._request_body = None
+        
 
-    def connect_to(self, queue_name):
+    def connect(self):
         pass
 
-    def wait_for_task(self):
+    def wait_messages(self):
         while not self._stop.is_set():
             # print("Waiting for requests ...")
             self._new_request.wait(timeout=5)
             if self._new_request.is_set():
-                self._callback(self._request_body)
+                self._listener.new_message(self._request_body)
                 self._new_request.clear()
 
 
@@ -59,8 +60,8 @@ class FakeQueueFactory:
     def __init__(self):
         self._queue = None
 
-    def __call__(self, queue_address, callback):
-        self._queue = FakeQueue(queue_address, callback)
+    def __call__(self, host, port, name, listener):
+        self._queue = FakeQueue(host, port, name, listener)
         return self._queue
 
     @property
