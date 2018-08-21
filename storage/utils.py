@@ -13,7 +13,7 @@ import logging
 from time import sleep
 
 
-RETRY_WARNING = "Retyring in {} seconds ({} / {})"
+RETRY_LOG = "Retying in {} seconds ({} / {})"
 
 
 def retry(max_attempts, backoff):
@@ -27,7 +27,7 @@ def retry(max_attempts, backoff):
                 try:
                     return action(*args, **kwargs)
                 except Exception as error:
-                    logging.warning(RETRY_WARNING.format(backoff, attempt, max_attempts))
+                    logging.info(RETRY_LOG.format(backoff, attempt, max_attempts))
                     sleep(backoff)
                 
             raise RuntimeError("All %d attempts failed!" % max_attempts)

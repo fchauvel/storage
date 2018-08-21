@@ -10,17 +10,11 @@
 
 
 
-import yaml
-
-import logging
-import logging.config
-
 from signal import signal, SIGINT, SIGTERM
-
-from time import sleep
 
 from sys import stdout
 
+from storage.log import Logger
 from storage.settings import Command
 from storage.utils import retry
 from storage.queues import QueueListener
@@ -33,14 +27,16 @@ class DBHandler(DBListener):
     Handle events from the database: log and forward them to the UI.
     """
 
-    def __init__(self, ui):
+    def __init__(self, ui, logger):
         self._ui = ui
+        self._logger = logger
     
     def connected(self, host, port, name):
+        self._logger.db_connected(host, port, name)
         self._ui.db_connected(host, port, name)
 
     def connection_failed(self, host, port, name, error):
-        logging.error(str(error))
+        self._logger.db_connection_failed(host, port, name, error)
         self._ui.db_connection_failed(host, port, name, type(error).__name__)
 
     def inserted(self, data):
@@ -57,15 +53,17 @@ class QueueHandler(QueueListener):
     Handle events comming from the message queue. Log and forward them to the UI."
     """
 
-    def __init__(self, ui, db):
+    def __init__(self, ui, db, logger):
         self._ui = ui
         self._db = db
+        self._logger = logger
 
     def connected(self, host, port, name):
+        self._logger.queue_connected(host, port, name)
         self._ui.queue_connected(host, port, name)
 
-    def connection_error(self, host, port, name, error):
-        logging.error(str(error))
+    def connection_failed(self, host, port, name, error):
+        self._logger.queue_connection_failed(host, port, name, error)
         self._ui.queue_connection_failed(host, port, name, type(error).__name__)
 
     def waiting_messages(self):
@@ -82,18 +80,19 @@ class Storage:
     def __init__(self, settings, ui, queue, db):
         self._settings = settings
         self._ui = ui
+        self._logger = Logger()
         self._db = db(settings.db_host,
                       settings.db_port,
                       settings.db_name,
-                      DBHandler(self._ui))
+                      DBHandler(self._ui, self._logger))
         self._queue = queue(settings.queue_host,
                             settings.queue_port,
                             settings.queue_name,
-                            QueueHandler(self._ui, self._db))
+                            QueueHandler(self._ui, self._db, self._logger))
                             
 
     def start(self):
-        self._setup_logging()
+        self._logger.starting_up()
         self._setup_signal_handlers()
 
         self._ui.greetings()
@@ -104,12 +103,6 @@ class Storage:
         elif self._settings.command == Command.STORE:
             self.store()
 
-    
-    def _setup_logging(self):
-        with open("logging.yml", "r") as source:
-            yamlConfig = yaml.load(source)
-            logging.config.dictConfig(yamlConfig)
-        
 
     def _setup_signal_handlers(self):
         import os

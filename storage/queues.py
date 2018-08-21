@@ -62,7 +62,7 @@ class RabbitMQ(Queue):
               
     def connect(self):
         try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=self._address))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=self._host))
             self._channel = connection.channel()
             self._channel.queue_declare(queue=self._name, durable=True)
             self._channel.basic_qos(prefetch_count=1)
@@ -70,8 +70,8 @@ class RabbitMQ(Queue):
             self._listener.connected(self._host, self._port, self._name)
             
         except Exception as error:
-            self._listener.connection_failed(self,_host, self._port, self._name, error)
-            raise error
+            self._listener.connection_failed(self._host, self._port, self._name, error)
+            raise
             
             
     def wait_messages(self):
