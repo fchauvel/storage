@@ -8,7 +8,7 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
-
+import json
 
 from signal import signal, SIGINT, SIGTERM
 
@@ -16,40 +16,55 @@ from sys import stdout
 
 from storage.log import Logger
 from storage.settings import Command
-from storage.utils import retry, relay_to
+from storage.utils import retry, FOREVER, relay_to
 from storage.queues import QueueListener
 from storage.db import DBListener
+from storage.sensapp import Registry, RegistryListener
 
 
 
-class MessageHandler(QueueListener, DBListener):
+class MessageHandler(QueueListener, DBListener, RegistryListener):
 
     """
     Handle new messages coming from the message-queue
     """
 
-    def __init__(self, db):
+    def __init__(self, ui, db, registry):
         QueueListener.__init__(self)
         DBListener.__init__(self)
+        RegistryListener.__init__(self)
+        self._ui = ui
         self._db = db
+        self._registry = registry
 
         
     def new_message(self, body):
-        self._db.store(body)
+        data = json.loads(body.decode("utf-8"))
+        sensor = data[0]["measurement"]
+        if self._registry.knows(sensor):
+            self._db.store(data)
+            self._ui.data_accepted(sensor)
+        else:
+            self._ui.data_rejected(sensor) 
 
     
 
 class Storage:
 
-    def __init__(self, settings, ui, queue, db):
+    def __init__(self, settings, ui, queue, db, registry):
         self._settings = settings
         self._ui = ui
         self._logger = Logger()
+        self._registry = registry(host="registry",
+                                  port=4567,
+                                  listener=relay_to(self._ui, self._logger))
         self._db = db(settings.db_host,
                       settings.db_port,
                       settings.db_name,
                       relay_to(self._ui, self._logger))
-        self._handler = MessageHandler(self._db)
+        self._handler = MessageHandler(self._ui,
+                                       self._db,
+                                       self._registry)
         self._queue = queue(settings.queue_host,
                             settings.queue_port,
                             settings.queue_name,
@@ -84,12 +99,12 @@ class Storage:
         self._queue.wait_messages() # Blocking call
 
 
-    @retry(max_attempts=-1, backoff=20)
+    @retry(max_attempts=FOREVER, backoff=20)
     def _connect_to_database(self):
         self._db.connect()
 
                       
-    @retry(max_attempts=-1, backoff=20)
+    @retry(max_attempts=FOREVER, backoff=20)
     def _connect_to_queue(self):
         self._queue.connect()
 

@@ -25,6 +25,7 @@ class UITests(TestCase):
     PORT = 6667
     NAME = "the_thing"
     ERROR = RuntimeError("This is bad error!")
+    SENSOR = "my-sensor"
 
     
     def setUp(self):
@@ -84,14 +85,25 @@ class UITests(TestCase):
                             error=type(self.ERROR).__name__);
 
     def _assert_buffer(self, pattern, **kwargs):
-        self.assertEqual(self._buffer.getvalue(),
-                         pattern.format(**kwargs))
+        self.assertIn(pattern.format(**kwargs), self._buffer.getvalue())
         
         
     def test_waiting_messages(self):
         self._ui.waiting_messages()
 
         self._assert_buffer(UI.WAITING_MESSAGES)
+
+                
+    def test_data_accepted(self):
+        self._ui.data_accepted(self.SENSOR)
+
+        self._assert_buffer(UI.DATA_ACCEPTED, sensor=self.SENSOR)
+
+
+    def test_data_rejected(self):
+        self._ui.data_rejected(self.SENSOR)
+
+        self._assert_buffer(UI.DATA_REJECTED, sensor=self.SENSOR)
 
         
     def test_show_request(self):
@@ -101,6 +113,16 @@ class UITests(TestCase):
         self.assertEqual(self._buffer.getvalue(),
                          UI.REQUEST.format(body=REQUEST))
 
+
+    def test_registry_error(self):
+        self._ui.registry_error(self.HOST, self.PORT, self.ERROR)
+
+        self._assert_buffer(UI.REGISTRY_ERROR,
+                            host=self.HOST,
+                            port=self.PORT,
+                            error=type(self.ERROR).__name__)
+                          
+        
         
     def test_show_error(self):
         self._ui.show_error(self.ERROR)

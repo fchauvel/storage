@@ -18,7 +18,7 @@ from storage.db import DBListener
 
 class UI:
 
-    
+
     VERSION = "{version}\n"
 
     GREETINGS = ("{program} -- v{version} ({license})\n"
@@ -28,13 +28,13 @@ class UI:
 
     DB_CONNECTION_FAILED = ("/!\ Cannot connect to DB '{name}' on {host}:{port}! ({error})\n"
                             "    Check log file for details.\n\n")
-    
+
     QUEUE_CONNECTED = "Connected to message-queue '{name}' on {host}:{port}.\n"
 
     QUEUE_CONNECTION_FAILED = ("/!\ Cannot connect to message-queue '{name}' on {host}:{port}! ({error})\n"
                                "    Check log file for details.\n\n")
 
-    
+
     CONNECTION = "Contacting '{address}' ...\n"
 
     WAITING_MESSAGES = "Waiting for messages (Ctrl+C to exit) ...\n"
@@ -45,7 +45,9 @@ class UI:
 
     ERROR = " /!\ Error: {error}\n"
 
-    
+    CHECK_LOGS = "    Check log file for details.\n\n"
+
+
     def __init__(self, output):
         QueueListener.__init__(self)
         DBListener.__init__(self)
@@ -85,14 +87,37 @@ class UI:
     def waiting_messages(self):
         self._print(self.WAITING_MESSAGES)
 
+
+    REGISTRY_ERROR = "/!\ Error while calling the registry at {host}:{port} ({error})!\n"
+
+    def registry_error(self, host, port, error):
+        self._print(self.REGISTRY_ERROR,
+                    host=host,
+                    port=port,
+                    error=type(error).__name__)
+        self._print(self.CHECK_LOGS)
+
+
+    DATA_ACCEPTED = "Welcoming data from '{sensor}'.\n"
+
+    def data_accepted(self, sensor):
+        self._print(self.DATA_ACCEPTED, sensor=sensor)
+
+
+    DATA_REJECTED = "Refusing data from '{sensor}'.\n"
+
+    def data_rejected(self, sensor):
+        self._print(self.DATA_REJECTED, sensor=sensor)
+
+
     def show_request(self, body):
         self._print(self.REQUEST, body=body)
 
     def show_error(self, error):
         self._print(self.ERROR, error=error)
-        
+
     def goodbye(self):
         self._print(self.GOODBYE)
-        
+
     def _print(self, text, **values):
         self._output.write(text.format(**values))

@@ -19,6 +19,7 @@ from storage.ui import UI
 from storage.queues import QueueFactories
 from storage.core import Storage
 from storage.db import DataStoreFactories
+from storage.sensapp import Registry
 
 
 def main():
@@ -26,5 +27,6 @@ def main():
     storage = Storage(settings,
                       UI(stdout),
                       QueueFactories.rabbitMQ,
-                      DataStoreFactories.influxDB)
+                      DataStoreFactories.influxDB,
+                      Registry)
     storage.start()

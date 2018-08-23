@@ -8,12 +8,19 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
+
+
 import logging
+
+import sys
 
 from time import sleep
 
 
-RETRY_LOG = "Retying in {} seconds ({} / {})"
+
+FOREVER = -1
+
+RETRY_LOG = "Retrying action '{}' in {} seconds ({} / {})"
 
 
 def retry(max_attempts, backoff):
@@ -26,8 +33,9 @@ def retry(max_attempts, backoff):
                 attempt += 1
                 try:
                     return action(*args, **kwargs)
-                except Exception as error:
-                    logging.info(RETRY_LOG.format(backoff, attempt, max_attempts))
+                except:
+                    logging.error(sys.exc_info()[0])
+                    logging.info(RETRY_LOG.format(action.__name__, backoff, attempt, max_attempts))
                     sleep(backoff)
                 
             raise RuntimeError("All %d attempts failed!" % max_attempts)
@@ -35,6 +43,7 @@ def retry(max_attempts, backoff):
         return wrapper
     
     return wrap
+
 
 
 

@@ -19,6 +19,7 @@ from threading import Thread
 from storage.settings import Settings, Command
 from storage.ui import UI
 from storage.core import Storage
+from storage.sensapp import Registry
 
 from tests.fakes import FakeQueueFactory, FakeDBFactory
 
@@ -31,22 +32,37 @@ class StorageTests(TestCase):
         self._ui = MagicMock(UI)
         self._queue_factory = FakeQueueFactory()
         self._db_factory = FakeDBFactory()
+        self._registry = MagicMock()
         self._storage = Storage(settings=self._settings,
                                 ui=self._ui,
                                 queue=self._queue_factory,
-                                db=self._db_factory)
+                                db=self._db_factory,
+                                registry=lambda *args, **kwargs: self._registry)
         self._consumer = None
 
 
-    def test_calls_db_on_new_request(self):
+    def test_calls_db_when_sensor_is_known(self):
+        self._registry.knows = MagicMock(return_value=True)
         self._start_storage()
 
-        self._send_request("Request 1")
+        self._send_request(b"[ { \"measurement\": \"sensor_3\" } ]")
         self._stop_queue()
 
-        self._db_factory.db.store.assert_called_once_with("Request 1")
+        self.assertEqual(self._db_factory.db.store.call_count, 1)
+        self.assertEqual(self._registry.knows.call_count, 1)
 
 
+    def test_do_not_call_db_when_sensor_is_not_known(self):
+        self._registry.knows = MagicMock(return_value=False)
+        self._start_storage()
+
+        self._send_request(b"[ { \"measurement\": \"sensor_3\" } ]")
+        self._stop_queue()
+
+        self.assertEqual(self._db_factory.db.store.call_count, 0)
+        self.assertEqual(self._registry.knows.call_count, 1)
+
+        
     def _start_storage(self):
         def do_start():
             self._storage.store()

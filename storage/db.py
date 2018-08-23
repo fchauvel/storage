@@ -75,8 +75,7 @@ class InfluxDB(DataStore):
             raise
 
 
-    def store(self, text):
-        data = json.loads(text.decode("utf-8"))
+    def store(self, data):
         try:
             self._client.write_points(data)
             self._listener.db_inserted(data)
