@@ -14,7 +14,6 @@ LABEL maintainer "franck.chauvel@sintef.no"
 
 # Update the dist and install needed tools
 RUN apt-get -qq update
-RUN apt-get -qq -y install git
 
 # Fetch, build and install sensapp-storage
 COPY . storage
