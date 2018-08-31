@@ -30,7 +30,7 @@ class Registry:
     def __init__(self, host, port, listener):
         self._host = host
         self._port = port
-        self._url = "http://{host}:{port}/sensapp/sensors/".format(host=host,
+        self._url = "http://{host}:{port}/sensors/".format(host=host,
                                                            port=port)
         self._listener = listener
 
