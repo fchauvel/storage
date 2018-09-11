@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/fchauvel/storage.svg?branch=master)](https://travis-ci.org/fchauvel/storage)
-
 [![Test Coverage](https://img.shields.io/codecov/c/github/fchauvel/storage.svg)](https://img.shields.io/codecov/c/github/fchauvel/storage.svg)
 
 
