@@ -7,10 +7,11 @@ env:
   - CODECOV_TOKEN="eb8922cf-a9e1-4d68-b5ab-d8bc20ad9900"
 
 install:
-  - pip install codecov
+  - pip install codecov coverage
   - pip install -r requirements.txt
   - pip install .
 
 script:
   - python setup.py test
+  - coverage run setup.py test
   - codecov
