@@ -3,7 +3,7 @@ __program__ = "SensApp::Storage"
 
 __copyright__ = "Copyright (C) 2018 SINTEF"
 
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 
 __license__ = "MIT"
 
