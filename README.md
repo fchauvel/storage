@@ -1,6 +1,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/77ca19b7e1d540269f63879e5fc33ed8)](https://app.codacy.com/app/fchauvel/storage?utm_source=github.com&utm_medium=referral&utm_content=fchauvel/storage&utm_campaign=Badge_Grade_Settings)
 [![Build Status](https://travis-ci.org/fchauvel/storage.svg?branch=master)](https://travis-ci.org/fchauvel/storage)
 [![Test Coverage](https://img.shields.io/codecov/c/github/fchauvel/storage.svg)](https://codecov.io/gh/fchauvel/storage)
+![GitHub tag](https://img.shields.io/github/tag/fchauvel/storage.svg)
 
 
 # SensApp::Storage 
