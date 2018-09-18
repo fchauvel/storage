@@ -8,16 +8,14 @@
 # of the MIT license.  See the LICENSE file for details.
 #
 
-FROM python:3.4-slim
+FROM python:3.5-alpine
 
 LABEL maintainer "franck.chauvel@sintef.no"
 
-# Update the dist and install needed tools
-RUN apt-get -qq update
+WORKDIR /storage
+COPY . /storage
 
 # Fetch, build and install sensapp-storage
-COPY . storage
-WORKDIR storage
 RUN pip install -r requirements.txt
 RUN pip install .
 
