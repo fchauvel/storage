@@ -4,8 +4,9 @@ python:
   - "3.4"
 
 env:
-  - CODECOV_TOKEN="eb8922cf-a9e1-4d68-b5ab-d8bc20ad9900"
-  - NAME="sensapp-storage"
+  global:
+    - CODECOV_TOKEN="eb8922cf-a9e1-4d68-b5ab-d8bc20ad9900"
+    - NAME="sensapp-storage"
   
 services:
   - docker
