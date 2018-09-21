@@ -18,8 +18,8 @@ from influxdb import InfluxDBClient
 class DataStoreFactories:
 
     @staticmethod
-    def influxDB(host, port, name, listener):
-        return InfluxDB(host, port, name, listener)
+    def influxDB(endpoint, listener):
+        return InfluxDB(endpoint, listener)
 
 
 
@@ -53,10 +53,10 @@ class DBListener:
 class InfluxDB(DataStore):
 
 
-    def __init__(self, host, port, name, listener):
-        self._host = host
-        self._port = port
-        self._name = name
+    def __init__(self, endpoint, listener):
+        self._host = endpoint.hostname
+        self._port = endpoint.port
+        self._name = endpoint.resource
         self._listener = listener
         self._client = None
 

@@ -54,33 +54,32 @@ class Storage:
     def __init__(self, settings, ui, queue, db, registry):
         self._settings = settings
         self._ui = ui
-        self._logger = Logger()
-        self._registry = registry(host="registry",
-                                  port=4567,
+        self._logger = Logger(settings)
+
+        self._registry = registry(settings.partners.registry,
                                   listener=relay_to(self._ui, self._logger))
-        self._db = db(settings.db_host,
-                      settings.db_port,
-                      settings.db_name,
+
+        self._db = db(settings.partners.database,
                       relay_to(self._ui, self._logger))
+        
         self._handler = MessageHandler(self._ui,
                                        self._db,
                                        self._registry)
-        self._queue = queue(settings.queue_host,
-                            settings.queue_port,
-                            settings.queue_name,
+
+        self._queue = queue(settings.partners.message_queue,
                             relay_to(self._ui, self._logger, self._handler))
                             
 
-    def start(self):
+    def start(self, command):
         self._logger.starting_up()
         self._setup_signal_handlers()
 
         self._ui.greetings()
         
-        if self._settings.command == Command.SHOW_VERSION:
+        if command == Command.SHOW_VERSION:
             self._ui.show_version()
 
-        elif self._settings.command == Command.STORE:
+        elif command == Command.STORE:
             self.store()
 
 

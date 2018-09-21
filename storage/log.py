@@ -27,12 +27,12 @@ QUEUE_CONNECTED = "Connected to message-queue '{name}' on {host}:{port}."
 
 class Logger(QueueListener, DBListener, RegistryListener):
 
-    def __init__(self):
+    def __init__(self, settings):
         QueueListener.__init__(self)
         DBListener.__init__(self)
         RegistryListener.__init__(self)
         
-        with open("logging.yml", "r") as source:
+        with open(settings.log_configuration, "r") as source:
             yamlConfig = yaml.load(source)
             logging.config.dictConfig(yamlConfig)
 

@@ -23,8 +23,8 @@ class FakeQueue(Queue):
     Let a third party trigger the reception of requests
     """
 
-    def __init__(self, host, port, name, listener):
-        super().__init__(host, port, name, listener)
+    def __init__(self, endpoint, listener):
+        super().__init__(endpoint, listener)
         self._stop = Event()
         self._new_request = Event()
         self._request_body = None
@@ -60,8 +60,8 @@ class FakeQueueFactory:
     def __init__(self):
         self._queue = None
 
-    def __call__(self, host, port, name, listener):
-        self._queue = FakeQueue(host, port, name, listener)
+    def __call__(self, endpoint, listener):
+        self._queue = FakeQueue(endpoint, listener)
         return self._queue
 
     @property

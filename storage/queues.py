@@ -14,8 +14,8 @@ import pika
 class QueueFactories:
 
     @staticmethod
-    def rabbitMQ(host, port, name, listener):
-        return RabbitMQ(host, port, name, listener)
+    def rabbitMQ(endpoint, listener):
+        return RabbitMQ(endpoint, listener)
 
 
     
@@ -37,10 +37,10 @@ class QueueListener:
     
 class Queue:
 
-    def __init__(self, host, port, name, listener):
-        self._host = host
-        self._port = port
-        self._name = name
+    def __init__(self, endpoint, listener):
+        self._host = endpoint.hostname
+        self._port = endpoint.port
+        self._name = endpoint.resource
         self._listener = listener
 
         
@@ -56,8 +56,8 @@ class Queue:
 class RabbitMQ(Queue):
 
     
-    def __init__(self, host, port, name, listener):
-        super().__init__(host, port, name, listener)
+    def __init__(self, endpoint, listener):
+        super().__init__(endpoint, listener)
 
               
     def connect(self):

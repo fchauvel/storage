@@ -9,7 +9,190 @@
 #
 
 
+
+import yaml
+
 from argparse import ArgumentParser
+from copy import deepcopy
+
+
+
+class EndPoint:
+
+    @staticmethod
+    def from_dictionary(dictionary, default):
+        return EndPoint(dictionary.get("domain", default.domain),
+                        dictionary.get("host", default.hostname),
+                        dictionary.get("port", default.port),
+                        dictionary.get("resource", default.resource))
+
+
+    def __init__(self, domain, hostname, port, resource=None): 
+        assert domain is None or isinstance(domain, str), "'domain' must be a string"
+        assert isinstance(hostname, str), "'hostname' must be a string"
+        self._domain = domain
+        self._hostname = hostname
+        self._port = int(port)
+        self._resource = resource
+
+    @property
+    def domain(self):
+        return self._domain
+
+    @domain.setter
+    def domain(self, new_domain):
+        self._domain = new_domain
+
+    @property
+    def hostname(self):
+        return self._hostname
+
+    @hostname.setter
+    def hostname(self, new_hostname):
+        self._hostname = new_hostname
+
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    def port(self, new_port):
+        self._port = new_port
+
+
+    @property
+    def resource(self):
+        return self._resource
+
+    @resource.setter
+    def resource(self, new_resource):
+        self._resource = new_resource
+
+
+class PartnerSet:
+
+    DEFAULT_REGISTRY = EndPoint("sensapp.org",
+                                "registry",
+                                4567)
+
+    DEFAULT_DATABASE = EndPoint("sensapp.org",
+                                "storage-db",
+                                8086,
+                                "sensapp")
+
+    DEFAULT_MESSAGE_QUEUE = EndPoint("sensapp.org",
+                                     "task-queue",
+                                     5672,
+                                     "SENSAPP_TASKS") 
+
+    @staticmethod
+    def from_dictionary(dictionary):
+
+        def fetch(key, default):
+            endpoint = deepcopy(default)
+            if key in dictionary:
+                endpoint = EndPoint.from_dictionary(dictionary[key], default)
+            return endpoint
+
+        registry = fetch("registry", PartnerSet.DEFAULT_REGISTRY)
+        database = fetch("database", PartnerSet.DEFAULT_DATABASE)
+        message_queue = fetch("message_queue", PartnerSet.DEFAULT_MESSAGE_QUEUE)
+
+        return PartnerSet(database, registry, message_queue)
+
+
+    @staticmethod
+    def defaults():
+        return PartnerSet(deepcopy(PartnerSet.DEFAULT_DATABASE),
+                          deepcopy(PartnerSet.DEFAULT_REGISTRY),
+                          deepcopy(PartnerSet.DEFAULT_MESSAGE_QUEUE))
+
+    
+    def __init__(self, database, registry, message_queue):
+        assert database, "database must be an endpoint (None found)"
+        assert registry, "registry must be an endpoint (None found)"
+        assert message_queue, "message queue must be an endpoint (None found)"
+        self._database = database
+        self._registry = registry
+        self._message_queue = message_queue
+
+    @property
+    def database(self):
+        return self._database
+
+    @property
+    def registry(self):
+        return self._registry
+
+    @property
+    def message_queue(self):
+        return self._message_queue
+
+
+
+class Settings:
+
+    DEFAULT_LOG_CONFIGURATION = "config/logging.yml"
+
+    @staticmethod
+    def defaults():
+        return Settings(PartnerSet.defaults(),
+                         Settings.DEFAULT_LOG_CONFIGURATION)
+
+    @staticmethod
+    def from_arguments(arguments):
+        settings = Settings.defaults()
+
+        if hasattr(arguments, "configuration_file"):
+            try :
+                with open(arguments.configuration_file) as source:
+                    settings = Settings.fromYAML(source)
+            except FileNotFoundError as error:
+                pass
+
+        settings.override_with(arguments)
+        
+        return settings
+    
+    @staticmethod
+    def fromYAML(source):
+        data = yaml.load(source)
+        return Settings.from_dictionary(data)
+
+    @staticmethod
+    def from_dictionary(dictionary):
+        partners = PartnerSet.defaults()
+        if "partners" in dictionary:
+            partners = PartnerSet.from_dictionary(dictionary["partners"])
+            
+        logging = dictionary.get("log_configuration",
+                                 Settings.DEFAULT_LOG_CONFIGURATION)
+        return Settings(partners, logging)
+
+    def __init__(self, partners, logging):
+        self.partners = partners
+        self.log_configuration = logging
+
+
+    def override_with(self, arguments):
+        mapping = [
+            ("db_domain", self.partners.database, "domain"),
+            ("db_host", self.partners.database, "hostname"),
+            ("db_port", self.partners.database, "port"),
+            ("queue_port", self.partners.message_queue, "port"),
+            ("queue_host", self.partners.message_queue, "hostname"),
+            ("queue_domain", self.partners.message_queue, "domain"),
+            ("registry_domain", self.partners.registry, "domain"),
+            ("registry_host", self.partners.registry, "hostname"),
+            ("registry_port", self.partners.registry, "port"),
+            
+        ]
+
+        for key, entity, attribute in mapping:
+            if hasattr(arguments, key):
+                setattr(entity, attribute, getattr(arguments, key))
+     
+
 
 
 class Command:
@@ -17,9 +200,7 @@ class Command:
     STORE=2
 
 
-class Settings:
-    """Hold the parameters given through the command line.
-    """
+class Arguments:
 
     DEFAULT_COMMAND = Command.STORE
     DEFAULT_QUEUE_HOST = "task-queue"
@@ -45,6 +226,9 @@ class Settings:
         self._db_host = kwargs["db_host"] or self.DEFAULT_DB_HOST
         self._db_port = kwargs["db_port"] or self.DEFAULT_DB_PORT
         self._db_name = kwargs["db_name"] or self.DEFAULT_DB_NAME
+        self._registry_host = kwargs["registry_host"] or None
+        self._registry_port = kwargs["registry_port"] or None
+        self._configuration_file = kwargs["configuration_file"] or None
         
     @property
     def command(self):
@@ -74,24 +258,39 @@ class Settings:
     def db_name(self):
         return self._db_name
 
+    @property
+    def registry_host(self):
+        return self._registry_host
+
+    @property
+    def registry_port(self):
+        return int(self._registry_port)
+
+    @property
+    def configuration_file(self):
+        return self._configuration_file
+
     @staticmethod
     def from_command_line(command_line):
         parser = ArgumentParser(prog="sensapp-storage",
                                 description="Stores data sent by sensors")
-        parser.add_argument("-v", "--version", help=Settings.HELP_VERSION,
+        parser.add_argument("-v", "--version", help=Arguments.HELP_VERSION,
                             action="store_const", dest="command", const=Command.SHOW_VERSION)
-        parser.add_argument("-q", "--queue-host", help= Settings.HELP_QUEUE_HOST)
-        parser.add_argument("-p", "--queue-port", help= Settings.HELP_QUEUE_PORT)
-        parser.add_argument("-n", "--queue-name", help= Settings.HELP_QUEUE_NAME)
-        parser.add_argument("-o", "--db-host", help=Settings.HELP_DB_HOST)
-        parser.add_argument("-r", "--db-port", help=Settings.HELP_DB_PORT)
-        parser.add_argument("-m", "--db-name", help=Settings.HELP_DB_NAME)
+        parser.add_argument("-q", "--queue-host", help= Arguments.HELP_QUEUE_HOST)
+        parser.add_argument("-p", "--queue-port", help= Arguments.HELP_QUEUE_PORT)
+        parser.add_argument("-n", "--queue-name", help= Arguments.HELP_QUEUE_NAME)
+        parser.add_argument("-o", "--db-host", help=Arguments.HELP_DB_HOST)
+        parser.add_argument("-r", "--db-port", help=Arguments.HELP_DB_PORT)
+        parser.add_argument("-m", "--db-name", help=Arguments.HELP_DB_NAME)
+        parser.add_argument("-t", "--registry-host", help="set the host name of the registry service")
+        parser.add_argument("-s", "--registry-port", help="set the porto of the registry service")
+        parser.add_argument("-c", "--configuration-file", help="set the file that contains the configuration")
         arguments = parser.parse_args(command_line)
-        return Settings(**vars(arguments))
+        return Arguments(**vars(arguments))
 
     @staticmethod
     def defaults():
-        return Settings(command=Command.STORE,
+        return Arguments(command=Command.STORE,
                         queue_host=None,
                         queue_port=None,
                         queue_name=None,

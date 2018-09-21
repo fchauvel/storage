@@ -1,0 +1,32 @@
+#
+# SensApp::Storage
+#
+# Copyright (C) 2018 SINTEF Digital
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms
+# of the MIT license.  See the LICENSE file for details.
+#
+
+partners:
+  
+  message-queue:
+    domain: sensapp.org
+    host: task-queue
+    port: 5672
+    resource: SENSAPP_TASKS
+    
+  registry:
+    domain: sensapp.org
+    host: registry
+    port: 3303
+
+  database:
+    domain: sensapp.org
+    host: storage-db
+    port: 8086
+    resource: SENSAPP
+
+log_configuration: config/logging.yml
+
+

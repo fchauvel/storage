@@ -14,7 +14,7 @@
 
 from sys import argv, stdout
 
-from storage.settings import Settings, Command
+from storage.settings import Arguments, Settings, Command
 from storage.ui import UI
 from storage.queues import QueueFactories
 from storage.core import Storage
@@ -22,11 +22,17 @@ from storage.db import DataStoreFactories
 from storage.sensapp import Registry
 
 
+
 def main():
-    settings = Settings.from_command_line(argv[1:])
+    arguments = Arguments.from_command_line(argv[1:])
+
+    settings = Settings.from_arguments(arguments)
+    
+    
     storage = Storage(settings,
                       UI(stdout),
                       QueueFactories.rabbitMQ,
                       DataStoreFactories.influxDB,
                       Registry)
-    storage.start()
+
+    storage.start(arguments.command)

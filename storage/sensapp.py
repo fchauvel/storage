@@ -27,9 +27,9 @@ REGISTRY_ERROR = "Registry failure! Got'{status}' from {method} {url}"
 
 class Registry:
 
-    def __init__(self, host, port, listener):
-        self._host = host
-        self._port = port
+    def __init__(self, endpoint, listener):
+        self._host = endpoint.hostname
+        self._port = endpoint.port
         self._url = "http://{host}:{port}/sensors/".format(host=host,
                                                            port=port)
         self._listener = listener
