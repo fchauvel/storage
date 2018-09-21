@@ -1,6 +1,7 @@
 # Emacs
 *~
 \#*\#
+.\#*
 
 # Python
 *.egg-info/*
@@ -9,3 +10,7 @@
 
 # Miscellaneous
 *.log
+
+# virtual environment
+venv/*
+.venv/*
