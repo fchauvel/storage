@@ -17,21 +17,21 @@ from storage.utils import retry, FOREVER
 
 
 class RegistryListener:
-    
+
     def registry_error(self, host, port, error):
         pass
 
 
 REGISTRY_ERROR = "Registry failure! Got'{status}' from {method} {url}"
-    
+
 
 class Registry:
 
     def __init__(self, endpoint, listener):
         self._host = endpoint.hostname
         self._port = endpoint.port
-        self._url = "http://{host}:{port}/sensors/".format(host=host,
-                                                           port=port)
+        self._url = "http://{host}:{port}/sensors/".format(host=self._host,
+                                                           port=self._port)
         self._listener = listener
 
 
@@ -42,7 +42,7 @@ class Registry:
             url = self._url + key
 
             response = get(url)
-                          
+
             if response.status_code == 200:
                 return True
             elif response.status_code == 204:
@@ -51,7 +51,7 @@ class Registry:
                 raise RuntimeError(REGISTRY_ERROR.format(status=response.status_code,
                                                          url=url,
                                                          method="GET"))
-        
+
         except Exception as error:
             self._listener.registry_error(self._host, self._port, error)
             raise error

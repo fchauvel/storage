@@ -24,11 +24,11 @@ from storage.sensapp import Registry
 
 
 def main():
+    
     arguments = Arguments.from_command_line(argv[1:])
 
     settings = Settings.from_arguments(arguments)
-    
-    
+        
     storage = Storage(settings,
                       UI(stdout),
                       QueueFactories.rabbitMQ,

@@ -27,7 +27,7 @@ class EndPoint:
                         dictionary.get("resource", default.resource))
 
 
-    def __init__(self, domain, hostname, port, resource=None): 
+    def __init__(self, domain, hostname, port, resource=None):
         assert domain is None or isinstance(domain, str), "'domain' must be a string"
         assert isinstance(hostname, str), "'hostname' must be a string"
         self._domain = domain
@@ -69,6 +69,7 @@ class EndPoint:
         self._resource = new_resource
 
 
+
 class PartnerSet:
 
     DEFAULT_REGISTRY = EndPoint("sensapp.org",
@@ -83,7 +84,7 @@ class PartnerSet:
     DEFAULT_MESSAGE_QUEUE = EndPoint("sensapp.org",
                                      "task-queue",
                                      5672,
-                                     "SENSAPP_TASKS") 
+                                     "SENSAPP_TASKS")
 
     @staticmethod
     def from_dictionary(dictionary):
@@ -107,7 +108,7 @@ class PartnerSet:
                           deepcopy(PartnerSet.DEFAULT_REGISTRY),
                           deepcopy(PartnerSet.DEFAULT_MESSAGE_QUEUE))
 
-    
+
     def __init__(self, database, registry, message_queue):
         assert database, "database must be an endpoint (None found)"
         assert registry, "registry must be an endpoint (None found)"
@@ -137,13 +138,14 @@ class Settings:
     @staticmethod
     def defaults():
         return Settings(PartnerSet.defaults(),
-                         Settings.DEFAULT_LOG_CONFIGURATION)
+                        Settings.DEFAULT_LOG_CONFIGURATION)
 
     @staticmethod
     def from_arguments(arguments):
         settings = Settings.defaults()
 
-        if hasattr(arguments, "configuration_file"):
+        if hasattr(arguments, "configuration_file") \
+           and arguments.configuration_file:
             try :
                 with open(arguments.configuration_file) as source:
                     settings = Settings.fromYAML(source)
@@ -151,9 +153,9 @@ class Settings:
                 pass
 
         settings.override_with(arguments)
-        
+
         return settings
-    
+
     @staticmethod
     def fromYAML(source):
         data = yaml.load(source)
@@ -164,7 +166,7 @@ class Settings:
         partners = PartnerSet.defaults()
         if "partners" in dictionary:
             partners = PartnerSet.from_dictionary(dictionary["partners"])
-            
+
         logging = dictionary.get("log_configuration",
                                  Settings.DEFAULT_LOG_CONFIGURATION)
         return Settings(partners, logging)
@@ -185,13 +187,12 @@ class Settings:
             ("registry_domain", self.partners.registry, "domain"),
             ("registry_host", self.partners.registry, "hostname"),
             ("registry_port", self.partners.registry, "port"),
-            
         ]
 
         for key, entity, attribute in mapping:
             if hasattr(arguments, key):
                 setattr(entity, attribute, getattr(arguments, key))
-     
+
 
 
 
@@ -209,6 +210,9 @@ class Arguments:
     DEFAULT_DB_HOST = "storage-db"
     DEFAULT_DB_PORT = "8086"
     DEFAULT_DB_NAME = "sensapp"
+    DEFAULT_REGISTRY_HOST = "registry"
+    DEFAULT_REGISTRY_PORT = 3303
+    DEFAULT_CONFIGURATION_FILE = "config/storage.yml"
 
     HELP_VERSION = "show the version number and exit"
     HELP_QUEUE_HOST = "set the host name of the message queue (default: " + DEFAULT_QUEUE_HOST + ")"
@@ -217,7 +221,7 @@ class Arguments:
     HELP_DB_HOST = "set the host name of the database (default: " + DEFAULT_DB_HOST + ")"
     HELP_DB_PORT = "set the port of the database (default: " + DEFAULT_DB_PORT + ")"
     HELP_DB_NAME = "set the name of the database (default: " + DEFAULT_DB_NAME + ")"
-    
+
     def __init__(self, **kwargs):
         self._command = kwargs["command"] or  self.DEFAULT_COMMAND
         self._queue_host = kwargs["queue_host"] or self.DEFAULT_QUEUE_HOST
@@ -226,10 +230,13 @@ class Arguments:
         self._db_host = kwargs["db_host"] or self.DEFAULT_DB_HOST
         self._db_port = kwargs["db_port"] or self.DEFAULT_DB_PORT
         self._db_name = kwargs["db_name"] or self.DEFAULT_DB_NAME
-        self._registry_host = kwargs["registry_host"] or None
-        self._registry_port = kwargs["registry_port"] or None
-        self._configuration_file = kwargs["configuration_file"] or None
-        
+        self._registry_host = kwargs["registry_host"] \
+                              or self.DEFAULT_REGISTRY_HOST
+        self._registry_port = kwargs["registry_port"] \
+                              or self.DEFAULT_REGISTRY_PORT
+        self._configuration_file = kwargs["configuration_file"] \
+                                   or self.DEFAULT_CONFIGURATION_FILE
+
     @property
     def command(self):
         return self._command
@@ -241,7 +248,7 @@ class Arguments:
     @property
     def queue_port(self):
         return int(self._queue_port)
-    
+
     @property
     def queue_name(self):
         return self._queue_name

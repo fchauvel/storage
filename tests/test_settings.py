@@ -28,7 +28,7 @@ class OverrideSettingsWithArguments(TestCase):
 
     def _override(self, dictionary):
         self.settings.override_with(type('struct', (object, ), dictionary))
-    
+
     def test_finds_db_domain_when_it_exists(self):
         self._override({"db_domain": "test"})
         self.assertEqual("test", self.settings.partners.database.domain)
@@ -36,6 +36,10 @@ class OverrideSettingsWithArguments(TestCase):
     def test_finds_db_host_when_it_exists(self):
         self._override({"db_host": "test"})
         self.assertEqual("test", self.settings.partners.database.hostname)
+
+    def test_finds_db_port_when_it_exists(self):
+        self._override({"db_port": 787878})
+        self.assertEqual(787878, self.settings.partners.database.port)
 
     def test_finds_db_port_when_it_exists(self):
         self._override({"db_port": 787878})
@@ -68,7 +72,11 @@ class OverrideSettingsWithArguments(TestCase):
     def test_finds_registry_port_when_it_exists(self):
         self._override({"registry_port": 1234567})
         self.assertEqual(1234567, self.settings.partners.registry.port)
-    
+
+    def test_finds_registry_port_when_it_is_None(self):
+        self._override({"registry_port": None})
+        self.assertEqual(None, self.settings.partners.registry.port)
+
 
 
 class CreateSettingsFromArguments(TestCase):
@@ -77,20 +85,20 @@ class CreateSettingsFromArguments(TestCase):
     def _arguments_from(self, **kwargs):
         return type('struct', (object, ), kwargs)
 
-    
+
     def test_uses_defaults_when_no_argument_is_given(self):
         arguments = self._arguments_from()
         settings = Settings.from_arguments(arguments)
         self.assertEqual(DeepDiff(Settings.defaults(), settings), {})
 
-        
+
     def test_uses_defaults_when_config_file_does_not_exist(self):
         arguments = self._arguments_from(
             configuration_file="does_not_exists.yml")
         settings = Settings.from_arguments(arguments)
         self.assertEqual(DeepDiff(Settings.defaults(), settings), {})
 
-        
+
     def test_uses_config_file_when_it_exists(self):
         arguments = self._arguments_from(
             configuration_file="config/storage.yml")
@@ -101,7 +109,7 @@ class CreateSettingsFromArguments(TestCase):
             expected = Settings.fromYAML(source)
             self.assertEqual(DeepDiff(expected, settings), {})
 
-            
+
     def test_overrides_defaults_with_given_arguments(self):
         arguments = self._arguments_from(
             db_host="test-db-server",
@@ -124,7 +132,7 @@ class CreateSettingsFromArguments(TestCase):
             expected = Settings.fromYAML(source)
             self.assertEqual(len(DeepDiff(expected, settings)["values_changed"]), 2)
 
-            
+
 
 class CreateSettingsFromYAML(TestCase):
 
@@ -171,7 +179,7 @@ class CreateSettingsFromYAML(TestCase):
 
     def test_finds_message_queue_name(self):
         self.assertEqual("SENSAPP_QUEUE", self.settings.partners.message_queue.resource)
-        
+
     def test_finds_registry_domain(self):
         self.assertEqual(self.domain, self.settings.partners.registry.domain)
 
@@ -183,7 +191,7 @@ class CreateSettingsFromYAML(TestCase):
 
     def test_finds_log_configuration(self):
         self.assertEqual("config/logging.yml", self.settings.log_configuration)
-       
+
 
 class CreatingSettingsFromAnIncompleteYAML(TestCase):
 
@@ -250,7 +258,7 @@ class CreatingSettingsFromAnIncompleteYAML(TestCase):
         self.assertEqual("message-queue",
                          settings.partners.message_queue.hostname)
 
-        
+
     def test_uses_defaults_when_endpoints_lacks_domain(self):
         snippet = ("log_configuration: bidon.yaml\n"
                    "partners:\n"
@@ -270,7 +278,7 @@ class CreatingSettingsFromAnIncompleteYAML(TestCase):
                          settings.partners.database.domain)
         self.assertEqual(12034,
                          settings.partners.database.port)
-                
+
 
     def test_uses_defaults_when_one_partner_is_missing(self):
         snippet = ("log_configuration: bidon.yaml\n"
@@ -292,7 +300,7 @@ class CreatingSettingsFromAnIncompleteYAML(TestCase):
         self.assertEqual(PartnerSet.DEFAULT_DATABASE.port,
                          settings.partners.database.port)
 
-        
+
     def test_uses_defaults_when_all_partners_are_missing(self):
         snippet = ("log_configuration: bidon.yaml\n"
                    # Missing database!
@@ -316,7 +324,7 @@ class CreatingSettingsFromAnIncompleteYAML(TestCase):
         self.assertEqual(Settings.DEFAULT_LOG_CONFIGURATION,
                          settings.log_configuration)
 
-        
+
 class APartnerSet(TestCase):
 
     def setUp(self):
@@ -369,7 +377,7 @@ class AnEndpoint(TestCase):
         self.endpoint = EndPoint(self.domain,
                                  self.hostname,
                                  self.port,
-                                 self.resource) 
+                                 self.resource)
 
 
     def test_exports_its_domain(self):
@@ -451,4 +459,3 @@ class CreatingArgumentsFromTheCommandLine(TestCase):
                         command_line.append(value)
                     arguments = Arguments.from_command_line(command_line)
                     self.assertEqual(expected, getattr(arguments, attribute))
-
